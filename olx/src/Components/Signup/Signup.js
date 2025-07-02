@@ -1,19 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState ,useContext} from 'react';
 
 import Logo from '../../olx-logo.png';
+import { FirebaseContext } from '../../store/Context'; 
 import './Signup.css';
+import { createUserWithEmailAndPassword,updateProfile } from 'firebase/auth';
+import { addDoc, collection } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 
 export default function Signup() {
+  const navigate=useNavigate()
   const [username,setUsername]=useState('');
   const [email,setEmail]=useState('')
   const [phone,setPhone]=useState('')
   const [password,setPassword]=useState('')
 
+const {db,auth}=useContext(FirebaseContext)
+
 const handleSubmit=(e)=>{
   e.preventDefault()
-  console.log(username)
+  createUserWithEmailAndPassword(auth,email,password).then((userCredential)=>{
+    const user=userCredential.user
+    return updateProfile(user,{displayName:username}).then(()=>{
+      addDoc(collection(db,'users'),{
+        id:user.uid,
+        username:username,
+        phone:phone
+      }).then(()=>{
+        navigate('/login')
+      })
+    })
+  })
 }
-
   return (
     <div>
       <div className="signupParentDiv">
@@ -28,7 +45,7 @@ const handleSubmit=(e)=>{
             onChange={(e)=>setUsername(e.target.value)}
             id="fname"
             name="name"
-            defaultValue="John"
+            
           />
           <br />
           <label htmlFor="fname">Email</label>
@@ -38,9 +55,8 @@ const handleSubmit=(e)=>{
             type="email"
             value={email}
             onChange={(e)=>setEmail(e.target.value)}
-            id="fname"
+            id="email"
             name="email"
-            defaultValue="John"
           />
           <br />
           <label htmlFor="lname">Phone</label>
@@ -50,9 +66,9 @@ const handleSubmit=(e)=>{
             type="number"
             value={phone}
             onChange={(e)=>setPhone(e.target.value)}
-            id="lname"
+            id="phone"
             name="phone"
-            defaultValue="Doe"
+            
           />
           <br />
           <label htmlFor="lname">Password</label>
@@ -62,9 +78,9 @@ const handleSubmit=(e)=>{
             type="password"
             value={password}
             onChange={(e)=>setPassword(e.target.value)}
-            id="lname"
+            id="password"
             name="password"
-            defaultValue="Doe"
+            
           />
           <br />
           <br />
